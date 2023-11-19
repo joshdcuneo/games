@@ -2,8 +2,6 @@ defmodule Games.ThreeDragonAnte.GameConfig do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Games.ThreeDragonAnte.{Deck, Game}
-
   @type t :: %__MODULE__{
           id: nil
         }
@@ -18,18 +16,5 @@ defmodule Games.ThreeDragonAnte.GameConfig do
 
   def new do
     %__MODULE__{}
-  end
-
-  def to_game(game_config) do
-    %Game{
-      id: generate_game_id(),
-      config: game_config,
-      deck: Deck.random(),
-      players: []
-    }
-  end
-
-  defp generate_game_id do
-    :crypto.strong_rand_bytes(20) |> Base.url_encode64() |> String.replace(~r/[^a-z0-9]/, "")
   end
 end

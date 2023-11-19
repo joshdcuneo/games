@@ -16,7 +16,7 @@ defmodule Games.ThreeDragonAnte do
   @spec setup_game(GameConfig.t()) :: {:ok, Game.t()}
   def setup_game(game_config) do
     game_config
-    |> GameConfig.to_game()
+    |> Game.new()
     |> Engine.setup_game()
   end
 

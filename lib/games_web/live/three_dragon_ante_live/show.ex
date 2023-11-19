@@ -1,7 +1,9 @@
 defmodule GamesWeb.ThreeDragonAnteLive.Show do
+  use GamesWeb, :live_view
+
+  alias Phoenix.Naming
   alias Games.ThreeDragonAnte
   alias Games.ThreeDragonAnte.{Card, Deck, Player}
-  use GamesWeb, :live_view
 
   @impl true
   def mount(params, _session, socket) do
@@ -16,7 +18,7 @@ defmodule GamesWeb.ThreeDragonAnteLive.Show do
 
   @impl true
   def handle_event("join", %{"name" => name}, socket) when is_binary(name) do
-    player = %Player{name: name}
+    player = Player.new(name)
     {:ok, game_state} = ThreeDragonAnte.join_game(socket.assigns.game, player)
 
     {:noreply, assign_game_state(socket, game_state)}
@@ -38,7 +40,7 @@ defmodule GamesWeb.ThreeDragonAnteLive.Show do
   @impl true
   def render(%{state: :waiting_for_players, game: _} = assigns) do
     ~H"""
-    <div>
+    <.game_table>
       <h2>Join the game!</h2>
       <.player_list players={@game.players} />
       <.simple_form id="player-form" phx-submit="join" for={%{"name" => ""}}>
@@ -47,29 +49,29 @@ defmodule GamesWeb.ThreeDragonAnteLive.Show do
           <.button phx-disable-with="Joining...">Join Game</.button>
         </:actions>
       </.simple_form>
-    </div>
+    </.game_table>
     """
   end
 
   def render(%{state: :can_start} = assigns) do
     ~H"""
-    <div>
+    <.game_table>
       <h2>Start the game!</h2>
       <.player_list players={@game.players} />
       <.button phx-click="start">Start Game</.button>
-    </div>
+    </.game_table>
     """
   end
 
   def render(assigns) do
-    IO.inspect(assigns)
-
     ~H"""
     <.game_table>
       <.deck deck={@game.deck} />
-      <%= for player <- @game.players do %>
-        <.player player={player} />
-      <% end %>
+      <ul class="flex flex-col gap-2 p-2">
+        <%= for player <- @game.players do %>
+          <li><.player player={player} /></li>
+        <% end %>
+      </ul>
     </.game_table>
     """
   end
@@ -78,7 +80,7 @@ defmodule GamesWeb.ThreeDragonAnteLive.Show do
 
   defp game_table(assigns) do
     ~H"""
-    <div class="h-screen w-screen bg-green-950">
+    <div class="h-screen w-screen overflow-hidden bg-green-950 text-white">
       <%= render_slot(@inner_block) %>
     </div>
     """
@@ -88,19 +90,44 @@ defmodule GamesWeb.ThreeDragonAnteLive.Show do
 
   defp deck(assigns) do
     ~H"""
-    <div class="flex flex-row border border-green-800 relative w-[100px] h-[200px]">
-      <%= for card <- @deck.cards do %>
-        <.card card={card} />
-      <% end %>
+    <div class="p-2">
+      <ul class={["flex flex-row border border-green-800 relative", card_class()]}>
+        <%= for card <- @deck.cards do %>
+          <li><.card card={card} class="absolute inset-0" /></li>
+        <% end %>
+      </ul>
+      <p>Deck Size: <%= length(@deck.cards) %></p>
     </div>
     """
   end
 
   attr :card, Card, required: true
+  attr :class, :string, default: ""
 
-  defp card(assigns) do
+  defp card(%{card: %{type: :legendary_dragon}} = assigns) do
     ~H"""
-    <div class="w-[100px] h-[200px] bg-blue-800 absolute inset-0" />
+    <div class={["bg-white text-black", @class, card_class()]}>
+      <p><%= Naming.humanize(@card.name) %></p>
+      <p><%= @card.power %></p>
+    </div>
+    """
+  end
+
+  defp card(%{card: %{type: :mortal}} = assigns) do
+    ~H"""
+    <div class={["bg-white text-black", @class, card_class()]}>
+      <p>The <%= Naming.humanize(@card.name) %></p>
+      <p><%= @card.power %></p>
+    </div>
+    """
+  end
+
+  defp card(%{card: %{type: :standard_dragon}} = assigns) do
+    ~H"""
+    <div class={["bg-white text-black", @class, card_class()]}>
+      <p><%= Naming.humanize(@card.name) %></p>
+      <p><%= @card.power %></p>
+    </div>
     """
   end
 
@@ -108,7 +135,19 @@ defmodule GamesWeb.ThreeDragonAnteLive.Show do
 
   defp player(assigns) do
     ~H"""
-    <div class="flex flex-col bg-yellow-800 w-[100px] h-[100px]" />
+    <div class="flex flex-row gap-2">
+      <div class={[
+        "flex flex-col items-center justify-center bg-yellow-800",
+        card_class()
+      ]}>
+        <%= @player.name %>
+      </div>
+      <ul class="flex flex-row gap-2">
+        <%= for card <- @player.hand do %>
+          <li><.card card={card} /></li>
+        <% end %>
+      </ul>
+    </div>
     """
   end
 
@@ -123,4 +162,6 @@ defmodule GamesWeb.ThreeDragonAnteLive.Show do
     </ul>
     """
   end
+
+  defp card_class, do: "w-[150px] h-[280px] p-2 rounded-sm"
 end

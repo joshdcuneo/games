@@ -10,7 +10,7 @@ defmodule Games.ThreeDragonAnte.Card do
   @dragon_sets %{
     black_dragon: [1, 2, 3, 5, 6, 7, 9],
     blue_dragon: [1, 2, 4, 6, 7, 9, 11],
-    brass_dragon: [1, 3, 4, 5, 7, 9],
+    brass_dragon: [1, 2, 3, 4, 5, 7, 9],
     bronze_dragon: [1, 3, 6, 7, 8, 9, 11],
     copper_dragon: [1, 3, 5, 6, 7, 8, 10],
     gold_dragon: [2, 4, 6, 8, 9, 11, 13],

@@ -60,7 +60,7 @@ defmodule GamesWeb.ThreeDragonAnteLive.Index do
 
   defp log_info(message, context \\ []) do
     for {key, value} <- context, into: message do
-      "\n  #{Naming.humanize(key)}: #{inspect(value)}"
+      "\n  #{Naming.humanize(key)}: #{inspect(value, pretty: true)}"
     end
     |> Logger.info()
   end

@@ -11,6 +11,13 @@ defmodule Games.ThreeDragonAnte.Deck do
     %Deck{cards: random_cards()}
   end
 
+  def draw(deck, n) do
+    {hand, cards} = Enum.split(deck.cards, n)
+    deck = %Deck{deck | cards: cards}
+
+    {hand, deck}
+  end
+
   defp random_cards do
     dragons =
       Card.dragons()
