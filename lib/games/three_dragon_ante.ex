@@ -13,25 +13,30 @@ defmodule Games.ThreeDragonAnte do
     GameConfig.changeset(game_config, attrs)
   end
 
-  @spec setup_game(GameConfig.t()) :: {:ok, Game.t()}
+  @spec setup_game(GameConfig.t()) :: {:ok, Game.t()} | {:error, :already_started}
   def setup_game(game_config) do
     game_config
     |> Game.new()
     |> Engine.setup_game()
   end
 
-  @spec connect_to_game(Game.id()) :: {:ok, Game.t()}
+  @spec connect_to_game(Game.id()) :: {:ok, Game.t()} | {:error, :not_found}
   def connect_to_game(game_id) do
     Engine.state(game_id)
   end
 
-  @spec join_game(Game.t(), Player.t()) :: {:ok, Game.t()}
+  @spec join_game(Game.t(), Player.t()) :: {:ok, Game.t()} | {:error, :not_found}
   def join_game(game, player) do
     Engine.join_game(game, player)
   end
 
-  @spec start_game(Game.t()) :: {:ok, Game.t()}
+  @spec start_game(Game.t()) :: {:ok, Game.t()} | {:error, :not_found}
   def start_game(game) do
     Engine.start_game(game)
+  end
+
+  @spec ante(Game.t(), Player.t(), Card.t()) :: {:ok, Game.t()} | {:error, :not_found}
+  def ante(game, player, card) do
+    Engine.ante(game, player, card)
   end
 end

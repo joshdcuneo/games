@@ -18,7 +18,7 @@ defmodule Games.Application do
       {Finch, name: Games.Finch},
       # Start a worker by calling: Games.Worker.start_link(arg)
       # {Games.Worker, arg},
-      {Registry, name: Games.GameRegistry, keys: :unique},
+      Games.GameRegistry.child_spec(),
       # Start to serve requests, typically the last entry
       GamesWeb.Endpoint
     ]

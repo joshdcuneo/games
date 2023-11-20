@@ -1,7 +1,7 @@
 defmodule Games.ThreeDragonAnte.GameState do
-  alias Games.ThreeDragonAnte.Game
+  alias Games.ThreeDragonAnte.{Card, Game, Player}
 
-  @type state_type :: :waiting_for_players | :can_start | :waiting_for_ante
+  @type state_type :: :waiting_for_players | :can_start | :waiting_for_ante | :ante_complete
 
   @type t :: %__MODULE__{
           type: state_type(),
@@ -34,5 +34,19 @@ defmodule Games.ThreeDragonAnte.GameState do
     game = Game.start(state.game)
 
     %__MODULE__{state | game: game, type: :waiting_for_ante}
+  end
+
+  @spec ante(t(), Player.t(), Card.t()) :: t()
+  def ante(state, player, card) do
+    game = Game.ante(state.game, player, card)
+
+    type =
+      if Enum.all?(game.players, &Player.ante?/1) do
+        :ante_complete
+      else
+        :waiting_for_ante
+      end
+
+    %__MODULE__{state | game: game, type: type}
   end
 end

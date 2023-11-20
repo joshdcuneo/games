@@ -18,7 +18,7 @@ defmodule GamesWeb.ThreeDragonAnteLive.Show do
 
   @impl true
   def handle_event("join", %{"name" => name}, socket) when is_binary(name) do
-    player = Player.new(name)
+    player = %Player{name: name}
     {:ok, game_state} = ThreeDragonAnte.join_game(socket.assigns.game, player)
 
     {:noreply, assign_game_state(socket, game_state)}

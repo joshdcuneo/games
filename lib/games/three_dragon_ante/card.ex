@@ -56,6 +56,7 @@ defmodule Games.ThreeDragonAnte.Card do
     {:wyrmpriest, 5}
   ]
 
+  @spec dragons() :: list(t())
   def dragons do
     Enum.flat_map(@dragon_sets, &color_dragons/1)
   end
@@ -70,6 +71,7 @@ defmodule Games.ThreeDragonAnte.Card do
     end
   end
 
+  @spec legendary_dragons() :: list(t())
   def legendary_dragons do
     for {name, power} <- @legendary_dragons do
       %__MODULE__{
@@ -80,6 +82,7 @@ defmodule Games.ThreeDragonAnte.Card do
     end
   end
 
+  @spec mortals() :: list(t())
   def mortals do
     for {name, power} <- @mortals do
       %__MODULE__{

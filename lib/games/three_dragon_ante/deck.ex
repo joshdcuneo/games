@@ -7,10 +7,12 @@ defmodule Games.ThreeDragonAnte.Deck do
 
   defstruct [:cards]
 
+  @spec random() :: t()
   def random do
     %Deck{cards: random_cards()}
   end
 
+  @spec draw(t(), non_neg_integer()) :: {list(Card.t()), t()}
   def draw(deck, n) do
     {hand, cards} = Enum.split(deck.cards, n)
     deck = %Deck{deck | cards: cards}

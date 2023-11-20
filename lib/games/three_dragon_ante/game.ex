@@ -47,4 +47,23 @@ defmodule Games.ThreeDragonAnte.Game do
       {remaining_deck, players ++ [%Player{player | hand: hand}]}
     end)
   end
+
+  @spec ante(t(), Player.t(), Card.t()) :: t()
+  def ante(game, player, card) do
+    players =
+      Enum.map(game.players, fn p ->
+        if p == player do
+          Player.ante(p, card)
+        else
+          p
+        end
+      end)
+
+    %__MODULE__{game | players: players}
+  end
+
+  @spec player?(t(), Player.t()) :: boolean()
+  def player?(game, player) do
+    player in game.players
+  end
 end

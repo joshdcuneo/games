@@ -2,40 +2,50 @@ defmodule Games.ThreeDragonAnte.Engine do
   use GenServer
   require Logger
 
-  alias Games.ThreeDragonAnte.{GameState, Player}
+  alias Games.ThreeDragonAnte.{Game, GameState, Player}
 
   # TODO shut down when idle
 
-  @spec setup_game(Game.t()) :: {:ok, Game.t()}
+  @spec setup_game(Game.t()) :: {:ok, Game.t()} | {:error, :already_started}
   def setup_game(game) do
     state = GameState.new(game)
-    {:ok, _pid} = GenServer.start(__MODULE__, state, name: via(game.id))
 
-    {:ok, game}
+    case GenServer.start(__MODULE__, state, name: via(game.id)) do
+      {:ok, _pid} -> {:ok, game}
+      {:error, :already_started} -> {:error, :already_started}
+    end
   end
 
-  @spec state(Game.id()) :: {:ok, GameState.t()}
+  @spec state(Game.id()) :: {:ok, GameState.t()} | {:error, :not_found}
   def state(game_id) do
-    state = GenServer.call(via(game_id), :state)
-    {:ok, state}
+    call(game_id, :state)
   end
 
-  @spec join_game(Game.t(), Player.t()) :: {:ok, GameState.t()}
+  @spec join_game(Game.t(), Player.t()) :: {:ok, GameState.t()} | {:error, :not_found}
   def join_game(game, player) do
-    state = GenServer.call(via(game.id), {:join, player})
-
-    {:ok, state}
+    call(game.id, {:join, player})
   end
 
-  @spec start_game(Game.t()) :: {:ok, GameState.t()}
+  @spec start_game(Game.t()) :: {:ok, GameState.t()} | {:error, :not_found}
   def start_game(game) do
-    state = GenServer.call(via(game.id), :start)
+    call(game.id, :start)
+  end
 
-    {:ok, state}
+  @spec ante(Game.t(), Player.t(), Card.t()) ::
+          {:ok, GameState.t()} | {:error, :not_found | :invalid_player | :invalid_card}
+  def ante(game, player, card) do
+    call(game.id, {:ante, player, card})
   end
 
   defp via(game_id) do
     {:via, Registry, {Games.GameRegistry, {__MODULE__, game_id}}}
+  end
+
+  defp call(game_id, msg) do
+    case GenServer.whereis(via(game_id)) do
+      nil -> {:error, :not_found}
+      pid -> GenServer.call(pid, msg)
+    end
   end
 
   @impl true
@@ -46,7 +56,7 @@ defmodule Games.ThreeDragonAnte.Engine do
 
   @impl true
   def handle_call(:state, _from, state) do
-    {:reply, state, state}
+    reply(state)
   end
 
   @impl true
@@ -55,11 +65,44 @@ defmodule Games.ThreeDragonAnte.Engine do
   end
 
   @impl true
+  def handle_call({:join, _player}, _from, state) do
+    error_reply(state)
+  end
+
+  @impl true
   def handle_call(:start, _from, %{type: :can_start} = state) do
     state |> GameState.start() |> reply()
   end
 
+  @impl true
+  def handle_call(:start, _from, state) do
+    error_reply(state)
+  end
+
+  @impl true
+  def handle_call({:ante, player, card}, _from, %{type: :waiting_for_ante} = state) do
+    cond do
+      !Game.player?(state.game, player) ->
+        error_reply(state, :invalid_player)
+
+      !Player.card?(player, card) ->
+        error_reply(state, :invalid_card)
+
+      true ->
+        state |> GameState.ante(player, card) |> reply()
+    end
+  end
+
+  @impl true
+  def handle_call({:ante, _player, _card}, _from, state) do
+    error_reply(state)
+  end
+
   defp reply(state) do
-    {:reply, state, state}
+    {:reply, {:ok, state}, state}
+  end
+
+  defp error_reply(state, error_type \\ nil) do
+    {:reply, {:error, error_type || state.type}, state}
   end
 end
